@@ -21,3 +21,8 @@ Automatic updates:
 Nginx headers:
 - Set HSTS
 - Set basic security headers (already in vhost templates)
+
+Secrets management:
+- Never commit production credentials into this repository
+- Keep `database.text` values as placeholders only
+- Store real secrets in a vault or secure secret manager

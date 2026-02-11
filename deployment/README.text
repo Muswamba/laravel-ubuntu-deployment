@@ -25,6 +25,8 @@ Ubuntu baseline:
 - Packages: deployment/common/packages.text
 - Server setup: deployment/common/server-setup.text
 - Security: deployment/common/security.text
+- Pre-deploy checklist: deployment/common/pre-deploy.text
+- Post-deploy checklist: deployment/common/post-deploy.text
 - Supervisor: deployment/common/supervisor.text
 - Reverb/WebSocket: deployment/common/reverb.text
 - WebSocket Nginx template: deployment/common/ws.conf.example
@@ -36,4 +38,5 @@ Notes:
 - Each project now also includes: command.text (domain prefilled copy/paste commands)
 - Each project nginx folder includes: web.conf, api.conf, ws.conf
 - Command files include Laravel Reverb + Supervisor + ws.<domain> Nginx setup
+- Database files should use placeholders only (never commit real credentials)
 - Keep ports and paths consistent per project to avoid conflicts.
