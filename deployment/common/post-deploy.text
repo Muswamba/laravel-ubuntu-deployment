@@ -1,0 +1,42 @@
+Post-deploy checklist
+
+Service health:
+- `sudo nginx -t`
+- `sudo systemctl status nginx --no-pager`
+- `sudo systemctl status php8.4-fpm --no-pager`
+- `sudo systemctl status mysql --no-pager`
+- `sudo systemctl status supervisor --no-pager`
+
+Supervisor processes:
+- `sudo supervisorctl status`
+- Queue worker process is `RUNNING`
+- Next.js process is `RUNNING`
+- Reverb process is `RUNNING` (if enabled)
+
+Application validation:
+- Web app loads on `https://<domain>`
+- API routes respond on `https://api.<domain>`
+- WebSocket endpoint reachable on `wss://ws.<domain>`
+- Login, core flow, and one critical business action tested
+
+Background jobs:
+- Dispatch a test job and confirm it is processed
+- Check queue logs for errors
+
+Scheduler:
+- Confirm cron installed for `schedule:run`
+- Trigger a scheduler task and verify execution
+
+Security and headers:
+- Confirm HTTPS redirect on all hosts
+- Confirm HSTS/security headers are present
+
+Logs and errors:
+- `sudo tail -n 100 /var/log/nginx/error.log`
+- Check Laravel logs: `storage/logs/laravel.log`
+- Check Supervisor logs under `/var/www/<domain>/logs/`
+
+Rollback readiness:
+- Previous app build/tag is known
+- Database restore procedure is verified
+- Team has rollback owner and communication channel

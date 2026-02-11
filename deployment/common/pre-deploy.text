@@ -1,0 +1,38 @@
+Pre-deploy checklist
+
+Server and OS:
+- Confirm Ubuntu version: 22.04 LTS or 24.04 LTS
+- `sudo apt update && sudo apt -y upgrade`
+- Confirm disk and memory are sufficient: `df -h`, `free -h`
+
+Access and security:
+- SSH key login works for deploy user
+- UFW is enabled for `22`, `80`, `443`
+- `fail2ban` active: `sudo systemctl status fail2ban --no-pager`
+
+Runtime:
+- `php8.4-fpm`, `mysql`, `nginx`, `supervisor` installed
+- Node and npm versions verified
+- Composer installed
+
+Project config:
+- Correct domain/subdomains (`web`, `api`, `ws`) in DNS
+- `.env` exists with production values (no debug)
+- Queue, cache, session, and mail drivers configured
+- Reverb env values set if real-time features are enabled
+
+Nginx and TLS:
+- Site configs present in `/etc/nginx/sites-available`
+- Symlinks exist in `/etc/nginx/sites-enabled`
+- `sudo nginx -t` passes
+- Certbot certificates ready or DNS propagated for issuance
+
+Application readiness:
+- Laravel dependencies installed (`composer install --no-dev`)
+- Frontend dependencies installed and app built
+- Storage and cache permissions fixed
+- Migrations reviewed and backup plan prepared
+
+Database safety:
+- Current backup taken before migration/import
+- Credentials are not committed in repository files
