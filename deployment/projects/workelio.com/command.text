@@ -1,0 +1,211 @@
+Ubuntu setup commands (copy/paste, Ubuntu 22.04 LTS or 24.04 LTS)
+
+Set variables first:
+DOMAIN="workelio.com"
+DEPLOY_USER="deploy"
+NODE_MAJOR="20"
+
+0) Verify OS version
+source /etc/os-release
+echo "$PRETTY_NAME"
+if [ "$VERSION_ID" != "22.04" ] && [ "$VERSION_ID" != "24.04" ]; then echo "Use Ubuntu 22.04 LTS or 24.04 LTS"; fi
+
+1) OS update
+sudo apt update
+sudo DEBIAN_FRONTEND=noninteractive apt -y upgrade
+sudo apt -y install unattended-upgrades
+sudo dpkg-reconfigure -f noninteractive unattended-upgrades
+
+2) Install baseline packages
+sudo apt -y install git curl wget unzip zip ca-certificates gnupg lsb-release software-properties-common build-essential
+
+3) Install Nginx, MySQL, Supervisor, security tools
+sudo apt -y install nginx mysql-server supervisor ufw fail2ban
+
+4) Add PHP repository (needed for PHP 8.4 on Ubuntu 22.04/24.04)
+sudo add-apt-repository -y ppa:ondrej/php
+sudo apt update
+
+5) Install PHP 8.4 + extensions
+sudo apt -y install php8.4-fpm php8.4-cli php8.4-common php8.4-mysql php8.4-xml php8.4-mbstring php8.4-curl php8.4-zip php8.4-bcmath php8.4-intl php8.4-gd php8.4-opcache
+
+6) Install Composer
+sudo apt -y install composer
+composer --version
+
+7) Install Node.js (NodeSource)
+curl -fsSL "https://deb.nodesource.com/setup_${NODE_MAJOR}.x" | sudo -E bash -
+sudo apt -y install nodejs
+node -v
+npm -v
+
+8) Install Certbot (TLS)
+sudo apt -y install certbot python3-certbot-nginx
+
+9) Optional packages
+sudo apt -y install redis-server memcached imagemagick php8.4-imagick
+
+10) Create deploy user and SSH folder (optional)
+sudo adduser --disabled-password --gecos "" "$DEPLOY_USER"
+sudo usermod -aG sudo "$DEPLOY_USER"
+sudo -u "$DEPLOY_USER" mkdir -p "/home/$DEPLOY_USER/.ssh"
+sudo chmod 700 "/home/$DEPLOY_USER/.ssh"
+
+11) Timezone and locale
+sudo timedatectl set-timezone UTC
+sudo locale-gen en_US.UTF-8
+sudo update-locale LANG=en_US.UTF-8
+
+12) App directories
+sudo mkdir -p "/var/www/$DOMAIN/backend" "/var/www/$DOMAIN/frontend" "/var/www/$DOMAIN/logs"
+sudo chown -R www-data:www-data "/var/www/$DOMAIN"
+
+13) Laravel writable paths (run after code deploy)
+sudo chown -R www-data:www-data "/var/www/$DOMAIN/backend/storage" "/var/www/$DOMAIN/backend/bootstrap/cache"
+sudo find "/var/www/$DOMAIN/backend/storage" -type d -exec chmod 775 {} \;
+sudo find "/var/www/$DOMAIN/backend/storage" -type f -exec chmod 664 {} \;
+sudo find "/var/www/$DOMAIN/backend/bootstrap/cache" -type d -exec chmod 775 {} \;
+sudo find "/var/www/$DOMAIN/backend/bootstrap/cache" -type f -exec chmod 664 {} \;
+
+14) Firewall (UFW)
+sudo ufw allow OpenSSH
+sudo ufw allow 80
+sudo ufw allow 443
+sudo ufw --force enable
+sudo ufw status
+
+15) Enable/start services
+sudo systemctl enable nginx
+sudo systemctl enable php8.4-fpm
+sudo systemctl enable mysql
+sudo systemctl enable supervisor
+sudo systemctl enable fail2ban
+
+sudo systemctl restart nginx
+sudo systemctl restart php8.4-fpm
+sudo systemctl restart mysql
+sudo systemctl restart supervisor
+sudo systemctl restart fail2ban
+
+16) Supervisor config (queue worker)
+sudo tee "/etc/supervisor/conf.d/${DOMAIN}-queue.conf" > /dev/null <<CONF
+[program:${DOMAIN}-queue]
+command=php /var/www/${DOMAIN}/backend/artisan queue:work --sleep=3 --tries=3 --timeout=90
+directory=/var/www/${DOMAIN}/backend
+user=www-data
+autostart=true
+autorestart=true
+redirect_stderr=true
+stdout_logfile=/var/www/${DOMAIN}/logs/queue.out.log
+stderr_logfile=/var/www/${DOMAIN}/logs/queue.err.log
+stopwaitsecs=3600
+CONF
+
+17) Supervisor config (Next.js)
+sudo tee "/etc/supervisor/conf.d/${DOMAIN}-next.conf" > /dev/null <<CONF
+[program:${DOMAIN}-next]
+command=npm start
+directory=/var/www/${DOMAIN}/frontend
+user=www-data
+autostart=true
+autorestart=true
+environment=NODE_ENV="production",PORT="3000"
+stdout_logfile=/var/www/${DOMAIN}/logs/next.out.log
+stderr_logfile=/var/www/${DOMAIN}/logs/next.err.log
+CONF
+
+18) Reverb env values (set in /var/www/$DOMAIN/backend/.env)
+cat <<ENV
+BROADCAST_CONNECTION=reverb
+REVERB_APP_ID=<app-id>
+REVERB_APP_KEY=<app-key>
+REVERB_APP_SECRET=<app-secret>
+REVERB_HOST=127.0.0.1
+REVERB_PORT=8080
+REVERB_SCHEME=http
+ENV
+
+19) Install/enable Reverb (inside backend)
+cd "/var/www/${DOMAIN}/backend"
+if php artisan list | grep -q "install:broadcasting"; then
+  php artisan install:broadcasting
+else
+  composer require laravel/reverb
+  php artisan reverb:install
+fi
+php artisan optimize:clear
+
+20) Supervisor config (Laravel Reverb)
+sudo tee "/etc/supervisor/conf.d/${DOMAIN}-reverb.conf" > /dev/null <<CONF
+[program:${DOMAIN}-reverb]
+command=php /var/www/${DOMAIN}/backend/artisan reverb:start --host=127.0.0.1 --port=8080
+directory=/var/www/${DOMAIN}/backend
+user=www-data
+autostart=true
+autorestart=true
+redirect_stderr=true
+stdout_logfile=/var/www/${DOMAIN}/logs/reverb.out.log
+stderr_logfile=/var/www/${DOMAIN}/logs/reverb.err.log
+CONF
+
+21) Apply Supervisor changes
+sudo supervisorctl reread
+sudo supervisorctl update
+sudo supervisorctl status
+
+22) Scheduler cron (Laravel)
+( sudo crontab -l 2>/dev/null; echo "* * * * * cd /var/www/${DOMAIN}/backend && php artisan schedule:run >> /dev/null 2>&1" ) | sudo crontab -
+
+23) Nginx WebSocket vhost (ws.$DOMAIN)
+sudo tee "/etc/nginx/sites-available/${DOMAIN}-ws.conf" > /dev/null <<CONF
+server {
+  listen 443 ssl http2;
+  listen [::]:443 ssl http2;
+
+  server_name ws.${DOMAIN};
+
+  location / {
+    proxy_pass http://127.0.0.1:8080;
+    proxy_http_version 1.1;
+
+    proxy_set_header Host \$host;
+    proxy_set_header X-Real-IP \$remote_addr;
+    proxy_set_header X-Forwarded-For \$proxy_add_x_forwarded_for;
+    proxy_set_header X-Forwarded-Proto \$scheme;
+
+    proxy_set_header Upgrade \$http_upgrade;
+    proxy_set_header Connection \$connection_upgrade;
+
+    proxy_read_timeout 600;
+    proxy_send_timeout 600;
+  }
+
+  ssl_certificate /etc/letsencrypt/live/${DOMAIN}/fullchain.pem;
+  ssl_certificate_key /etc/letsencrypt/live/${DOMAIN}/privkey.pem;
+  include /etc/letsencrypt/options-ssl-nginx.conf;
+  ssl_dhparam /etc/letsencrypt/ssl-dhparams.pem;
+}
+
+server {
+  listen 80;
+  listen [::]:80;
+
+  server_name ws.${DOMAIN};
+  return 301 https://\$host\$request_uri;
+}
+CONF
+sudo ln -sfn "/etc/nginx/sites-available/${DOMAIN}-ws.conf" "/etc/nginx/sites-enabled/${DOMAIN}-ws.conf"
+
+24) TLS certificate (after DNS points to server)
+sudo certbot --nginx -d "$DOMAIN" -d "www.$DOMAIN" -d "api.$DOMAIN" -d "www.api.$DOMAIN" -d "ws.$DOMAIN"
+sudo nginx -t
+sudo systemctl reload nginx
+
+25) Validation commands
+sudo nginx -t
+sudo systemctl status nginx --no-pager
+sudo systemctl status php8.4-fpm --no-pager
+sudo systemctl status mysql --no-pager
+sudo systemctl status supervisor --no-pager
+sudo supervisorctl status | grep "$DOMAIN-"
+sudo tail -n 50 /var/log/nginx/error.log

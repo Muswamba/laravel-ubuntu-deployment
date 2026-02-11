@@ -1,0 +1,19 @@
+Project: 5sur5.fit
+
+Stack:
+- Laravel backend (API)
+- Next.js frontend
+- Mobile API via api.5sur5.fit (same Laravel app)
+
+Domains:
+- Web: 5sur5.fit and www.5sur5.fit
+- API: api.5sur5.fit and www.api.5sur5.fit
+- WebSocket: ws.5sur5.fit
+
+Paths (recommended):
+- Backend: /var/www/5sur5.fit/backend
+- Frontend: /var/www/5sur5.fit/frontend
+
+Ports:
+- Next.js: 3000 (adjust if needed)
+- Reverb: 8080 (localhost only, see nginx/ws.conf)

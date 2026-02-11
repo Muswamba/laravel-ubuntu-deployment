@@ -1,0 +1,39 @@
+Deployment notes workspace
+
+Structure:
+- common: shared Ubuntu + Nginx notes
+- projects/<domain>: per-project deployment notes
+
+Projects:
+- pourtoi.love
+- lienskill.com
+- 5sur5.fit
+- jamiacore.com
+- workelio.com
+
+Standard layout (recommended, adjust if needed):
+- /var/www/<domain>/backend  (Laravel)
+- /var/www/<domain>/frontend (Next.js)
+
+Nginx:
+- Global config: deployment/common/nginx.conf
+- Per-project vhosts: deployment/projects/<domain>/nginx/
+
+Ubuntu baseline:
+- Overview: deployment/common/ubuntu.text
+- Commands (copy/paste): deployment/common/command.text
+- Packages: deployment/common/packages.text
+- Server setup: deployment/common/server-setup.text
+- Security: deployment/common/security.text
+- Supervisor: deployment/common/supervisor.text
+- Reverb/WebSocket: deployment/common/reverb.text
+- WebSocket Nginx template: deployment/common/ws.conf.example
+- Supported OS: Ubuntu 22.04 LTS and Ubuntu 24.04 LTS
+- Standard PHP version: 8.4
+
+Notes:
+- Each project includes: overview.text, database.text, repos.text, nginx/*
+- Each project now also includes: command.text (domain prefilled copy/paste commands)
+- Each project nginx folder includes: web.conf, api.conf, ws.conf
+- Command files include Laravel Reverb + Supervisor + ws.<domain> Nginx setup
+- Keep ports and paths consistent per project to avoid conflicts.

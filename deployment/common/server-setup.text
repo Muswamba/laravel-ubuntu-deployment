@@ -1,0 +1,30 @@
+Server setup (Ubuntu)
+
+User and access:
+- Create a deploy user and add to sudo group
+- Add SSH key to /home/<user>/.ssh/authorized_keys
+- Disable password auth if you use keys only
+
+Time and locale:
+- Set timezone: timedatectl set-timezone <Region/City>
+- Ensure locale is set (e.g. en_US.UTF-8)
+
+Filesystem layout (recommended):
+- /var/www/<domain>/backend
+- /var/www/<domain>/frontend
+- /var/www/<domain>/logs
+
+Permissions:
+- chown -R www-data:www-data /var/www/<domain>/backend/storage /var/www/<domain>/backend/bootstrap/cache
+- Set correct permissions for storage and cache
+
+Services:
+- systemctl enable nginx
+- systemctl enable php8.4-fpm
+- systemctl enable mysql
+- systemctl enable supervisor
+
+Nginx:
+- Put per-site configs in /etc/nginx/sites-available
+- Symlink into /etc/nginx/sites-enabled
+- nginx -t then systemctl reload nginx

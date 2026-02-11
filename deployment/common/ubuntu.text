@@ -1,0 +1,23 @@
+Ubuntu deployment checklist (high level, Ubuntu 22.04 LTS or 24.04 LTS)
+
+1) OS update
+- apt update && apt -y upgrade
+- apt -y install unattended-upgrades
+
+2) Base packages
+- See deployment/common/packages.text
+
+3) Server setup
+- See deployment/common/server-setup.text
+
+4) Security hardening
+- See deployment/common/security.text
+
+5) Supervisor
+- See deployment/common/supervisor.text
+
+6) Laravel WebSocket (Reverb)
+- See deployment/common/reverb.text
+
+7) TLS
+- Use certbot and store certs under /etc/letsencrypt/live/<domain>/

@@ -1,0 +1,19 @@
+Project: jamiacore.com
+
+Stack:
+- Laravel backend (API)
+- Next.js frontend
+- Mobile API via api.jamiacore.com (same Laravel app)
+
+Domains:
+- Web: jamiacore.com and www.jamiacore.com
+- API: api.jamiacore.com and www.api.jamiacore.com
+- WebSocket: ws.jamiacore.com
+
+Paths (recommended):
+- Backend: /var/www/jamiacore.com/backend
+- Frontend: /var/www/jamiacore.com/frontend
+
+Ports:
+- Next.js: 3000 (adjust if needed)
+- Reverb: 8080 (localhost only, see nginx/ws.conf)

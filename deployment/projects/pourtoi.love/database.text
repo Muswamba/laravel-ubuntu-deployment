@@ -1,0 +1,11 @@
+Database:pourtoi
+name: pourtoi
+username: userprtoi_22
+password: 22@pourtoi##001
+
++++++++++++++++++++++++++++++++++++++++++++++++++++
+
+sudo mysql -e "CREATE DATABASE pourtoi CHARACTER SET utf8mb4 COLLATE utf8mb4_unicode_ci;"
+sudo mysql -e "CREATE USER 'userprtoi_22'@'localhost' IDENTIFIED BY '22@pourtoi##001';"
+sudo mysql -e "GRANT ALL PRIVILEGES ON pourtoi.* TO 'userprtoi_22'@'localhost';"
+sudo mysql -e "FLUSH PRIVILEGES;"
