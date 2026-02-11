@@ -1,0 +1,32 @@
+Laravel WebSocket (Reverb) setup
+
+Purpose:
+- Real-time events for chat, notifications, typing, presence.
+
+Host strategy:
+- Run Reverb only on localhost: 127.0.0.1:8080
+- Expose it through Nginx on: ws.<domain>
+
+Laravel .env values:
+- BROADCAST_CONNECTION=reverb
+- REVERB_APP_ID=<app-id>
+- REVERB_APP_KEY=<app-key>
+- REVERB_APP_SECRET=<app-secret>
+- REVERB_HOST=127.0.0.1
+- REVERB_PORT=8080
+- REVERB_SCHEME=http
+
+Install (inside backend):
+- Preferred (Laravel 11+): php artisan install:broadcasting
+- Alternative: composer require laravel/reverb && php artisan reverb:install
+
+Runtime:
+- Keep process alive with Supervisor using artisan reverb:start
+- Use project Nginx file: deployment/projects/<domain>/nginx/ws.conf
+
+TLS:
+- Include ws.<domain> in certbot domains
+
+Checks:
+- supervisorctl status | grep <domain>-reverb
+- nginx -t

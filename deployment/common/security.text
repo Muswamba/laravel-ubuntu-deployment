@@ -1,0 +1,23 @@
+Security baseline
+
+Firewall:
+- ufw allow OpenSSH
+- ufw allow 80
+- ufw allow 443
+- ufw enable
+
+SSH hardening:
+- Disable root login
+- Use SSH keys, disable password auth if possible
+- Change default SSH port only if required by policy
+
+Fail2ban:
+- Install and enable fail2ban
+- Add jail for sshd
+
+Automatic updates:
+- Enable unattended-upgrades for security patches
+
+Nginx headers:
+- Set HSTS
+- Set basic security headers (already in vhost templates)

@@ -1,0 +1,43 @@
+Supervisor setup
+
+Install:
+- apt -y install supervisor
+- systemctl enable supervisor
+- systemctl start supervisor
+
+Laravel queue worker example:
+- /etc/supervisor/conf.d/<domain>-queue.conf
+- command: php /var/www/<domain>/backend/artisan queue:work --sleep=3 --tries=3 --timeout=90
+- user: www-data
+- autostart: true
+- autorestart: true
+- stderr_logfile: /var/www/<domain>/logs/queue.err.log
+- stdout_logfile: /var/www/<domain>/logs/queue.out.log
+
+Laravel scheduler example:
+- Use cron: * * * * * cd /var/www/<domain>/backend && php artisan schedule:run >> /dev/null 2>&1
+
+Next.js example:
+- /etc/supervisor/conf.d/<domain>-next.conf
+- command: npm start
+- directory: /var/www/<domain>/frontend
+- user: www-data
+- autostart: true
+- autorestart: true
+- stderr_logfile: /var/www/<domain>/logs/next.err.log
+- stdout_logfile: /var/www/<domain>/logs/next.out.log
+
+Laravel Reverb (WebSocket) example:
+- /etc/supervisor/conf.d/<domain>-reverb.conf
+- command: php /var/www/<domain>/backend/artisan reverb:start --host=127.0.0.1 --port=8080
+- directory: /var/www/<domain>/backend
+- user: www-data
+- autostart: true
+- autorestart: true
+- stderr_logfile: /var/www/<domain>/logs/reverb.err.log
+- stdout_logfile: /var/www/<domain>/logs/reverb.out.log
+
+Apply changes:
+- supervisorctl reread
+- supervisorctl update
+- supervisorctl status

@@ -1,0 +1,19 @@
+Project: workelio.com
+
+Stack:
+- Laravel backend (API)
+- Next.js frontend
+- Mobile API via api.workelio.com (same Laravel app)
+
+Domains:
+- Web: workelio.com and www.workelio.com
+- API: api.workelio.com and www.api.workelio.com
+- WebSocket: ws.workelio.com
+
+Paths (recommended):
+- Backend: /var/www/workelio.com/backend
+- Frontend: /var/www/workelio.com/frontend
+
+Ports:
+- Next.js: 3000 (adjust if needed)
+- Reverb: 8080 (localhost only, see nginx/ws.conf)
